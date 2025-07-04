@@ -1,0 +1,175 @@
+# Project Funding DAO Smart Contract
+
+A decentralized autonomous organization (DAO) smart contract built on the Stacks blockchain for funding projects through community voting.
+
+## Overview
+
+This smart contract implements a comprehensive DAO system that allows members to propose projects, vote on funding proposals, and manage a shared treasury. The contract is written in Clarity and designed to be deployed on the Stacks blockchain.
+
+## Features
+
+### Core Functionality
+- **Member Management**: Join the DAO and receive voting power
+- **Treasury Management**: Deposit funds and manage the DAO treasury
+- **Proposal System**: Create funding proposals with detailed descriptions
+- **Voting Mechanism**: Democratic voting on proposals with configurable parameters
+- **Execution System**: Automatic fund distribution for approved proposals
+
+### Admin Features
+- **Voting Parameter Updates**: Modify voting periods, quorum, and approval thresholds
+- **Member Management**: Update voting power and deactivate members
+- **Emergency Controls**: Emergency fund withdrawal capabilities
+
+## Contract Architecture
+
+### Data Structures
+
+#### Proposals
+```clarity
+{
+  id: uint,
+  title: (string-ascii 100),
+  description: (string-ascii 500),
+  proposer: principal,
+  amount: uint,
+  recipient: principal,
+  votes-for: uint,
+  votes-against: uint,
+  voting-end-block: uint,
+  executed: bool,
+  created-at: uint
+}
+```
+
+#### Members
+```clarity
+{
+  joined-at: uint,
+  active: bool
+}
+```
+
+#### Votes
+```clarity
+{
+  vote: bool,
+  amount: uint
+}
+```
+
+### Key Parameters
+
+- **Minimum Voting Period**: 144 blocks (~1 day)
+- **Maximum Voting Period**: 1,440 blocks (~10 days)
+- **Default Quorum**: 10% of total voting power
+- **Approval Threshold**: 50% of votes cast
+- **Initial Voting Power**: 1 per member
+
+## Functions
+
+### Public Functions
+
+#### Member Functions
+- `join-dao()` - Join the DAO as a member
+- `deposit-to-treasury(amount)` - Deposit STX to the DAO treasury
+
+#### Proposal Functions
+- `create-proposal(title, description, amount, recipient, voting-period)` - Create a new funding proposal
+- `vote-on-proposal(proposal-id, vote-for)` - Vote on a proposal
+- `execute-proposal(proposal-id)` - Execute an approved proposal
+
+#### Admin Functions (Owner Only)
+- `update-voting-parameters(min-period, max-period, quorum, threshold)` - Update voting parameters
+- `update-member-voting-power(member, new-power)` - Update a member's voting power
+- `deactivate-member(member)` - Deactivate a member
+- `emergency-withdraw(amount)` - Emergency fund withdrawal
+
+### Read-Only Functions
+- `get-proposal(proposal-id)` - Get proposal details
+- `get-vote(proposal-id, voter)` - Get vote information
+- `get-member-voting-power(member)` - Get member's voting power
+- `get-member-info(member)` - Get member information
+- `get-dao-treasury()` - Get current treasury balance
+- `get-voting-parameters()` - Get current voting parameters
+- `is-proposal-approved(proposal-id)` - Check if proposal is approved
+- `has-voting-ended(proposal-id)` - Check if voting period has ended
+
+## Error Codes
+
+| Code | Constant | Description |
+|------|----------|-------------|
+| 100 | `err-owner-only` | Function can only be called by contract owner |
+| 101 | `err-not-found` | Requested item not found |
+| 102 | `err-unauthorized` | Caller not authorized for this action |
+| 103 | `err-invalid-amount` | Invalid amount provided |
+| 104 | `err-proposal-exists` | Proposal already exists |
+| 105 | `err-voting-period-ended` | Voting period has ended |
+| 106 | `err-voting-period-active` | Voting period is still active |
+| 107 | `err-already-voted` | User has already voted on this proposal |
+| 108 | `err-insufficient-funds` | Insufficient funds in treasury |
+| 109 | `err-proposal-not-approved` | Proposal was not approved |
+| 110 | `err-funds-already-claimed` | Funds have already been claimed |
+| 111 | `err-invalid-voting-period` | Invalid voting period specified |
+| 112 | `err-invalid-quorum` | Invalid quorum percentage |
+
+## Usage Examples
+
+### Joining the DAO
+```clarity
+(contract-call? .dao-contract join-dao)
+```
+
+### Depositing to Treasury
+```clarity
+(contract-call? .dao-contract deposit-to-treasury u1000000) ;; 1 STX
+```
+
+### Creating a Proposal
+```clarity
+(contract-call? .dao-contract create-proposal 
+  "Fund Website Development" 
+  "Build a new website for the DAO with modern UI/UX" 
+  u5000000 ;; 5 STX
+  'SP2J6ZY48GV1EZ5V2V5RB9MP66SW86PYKKNRV9EJ7 ;; recipient
+  u720) ;; 5 day voting period
+```
+
+### Voting on a Proposal
+```clarity
+(contract-call? .dao-contract vote-on-proposal u1 true) ;; Vote yes on proposal 1
+```
+
+### Executing an Approved Proposal
+```clarity
+(contract-call? .dao-contract execute-proposal u1)
+```
+
+## Deployment
+
+### Prerequisites
+- [Clarinet](https://github.com/hirosystems/clarinet) installed
+- Stacks testnet/mainnet access
+- STX tokens for deployment
+
+### Steps
+
+1. **Install Clarinet**
+   ```bash
+   curl -L https://github.com/hirosystems/clarinet/releases/download/v1.8.0/clarinet-linux-x64.tar.gz | tar xz
+   ```
+
+2. **Initialize Project**
+   ```bash
+   clarinet new dao-project
+   cd dao-project
+   ```
+
+3. **Add Contract**
+   ```bash
+   clarinet contract new stacks-ventures
+   ```
+
+4. **Deploy Contract**
+   ```bash
+   clarinet deploy --testnet
+   ```
